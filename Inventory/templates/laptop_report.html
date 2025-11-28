@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-laptop me-2"></i>Laptop Report</h2>
+
+    <!-- Dropdown Filter -->
+    <form method="get" class="mb-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-auto">
+                <label for="filter_by" class="col-form-label fw-bold">Filter By:</label>
+            </div>
+            <div class="col-auto">
+                <select name="filter_by" id="filter_by" class="form-select" onchange="showFilterInput()">
+                    <option value="All" {% if filter_by == 'All' %}selected{% endif %}>All</option>
+                    <option value="Users" {% if filter_by == 'Users' %}selected{% endif %}>Users (Staff)</option>
+                    <option value="Department" {% if filter_by == 'Department' %}selected{% endif %}>Department</option>
+                    <option value="Date of Purchase" {% if filter_by == 'Date of Purchase' %}selected{% endif %}>Date of Purchase</option>
+                    <option value="Issue Date" {% if filter_by == 'Issue Date' %}selected{% endif %}>Issue Date</option>
+                    <option value="Employee Joining Date" {% if filter_by == 'Employee Joining Date' %}selected{% endif %}>Employee Joining Date</option>
+                    <option value="Specs" {% if filter_by == 'Specs' %}selected{% endif %}>Specs</option>
+                    <option value="Serial No" {% if filter_by == 'Serial No' %}selected{% endif %}>Serial No</option>
+                </select>
+            </div>
+            <div class="col-auto" id="filterInputContainer" style="display: none;">
+                <div class="input-group" id="textFilter" style="display: none;">
+                    <input type="text" class="form-control" id="filterValue" name="filter_value" placeholder="Type to filter...">
+                    <button class="btn btn-success" type="submit">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+                <div class="input-group" id="dateFilter" style="display: none;">
+                    <input type="date" class="form-control" id="filterDate" name="filter_date">
+                    <button class="btn btn-success" type="submit">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <!-- FIX: Change 'laptop_report' to 'main.laptop_report' -->
+                <a href="{{ url_for('main.laptop_report') }}" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Reset
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Users</th>
+                    <th>Department</th>
+                    <th>Laptop Age Policy</th>
+                    <th>Date of Purchase</th>
+                    <th>End of Laptop Life</th>
+                    <th>Issue Date</th>
+                    <th>Employee Joining Date</th>
+                    <th>Employee Eligibility</th>
+                    <th>Specs</th>
+                    <th>Serial No</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% if laptop_data %}
+                {% for row in laptop_data %}
+                <tr>
+                <td>{{ row['Users'] or '—' }}</td>
+<td>{{ row['Department'] or '—' }}</td>
+<td>4.5 Years</td>
+<td>{{ row['Date of Purchase'] | dateformat if row['Date of Purchase'] else '—' }}</td>
+<td>{{ row['End of Laptop Life'] or '—' }}</td>
+<td>{{ row['Issue Date'] | dateformat if row['Issue Date'] else '—' }}</td>
+<td>{{ row['Employee Joining Date'] | dateformat if row['Employee Joining Date'] else '—' }}</td>
+<td>{{ row['Employee Eligibility'] or '—' }}</td>
+<td>{{ row['Specs'] or '—' }}</td>
+<td>{{ row['Serial No'] or '—' }}</td>
+<td>{{ row['Description'] or '—' }}</td>
+
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="11" class="text-center text-muted">No data available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function showFilterInput() {
+    const filterBy = document.getElementById('filter_by').value;
+    const textFilter = document.getElementById('textFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const filterInputContainer = document.getElementById('filterInputContainer');
+    
+    // Show/hide filter containers
+    filterInputContainer.style.display = filterBy === 'All' ? 'none' : 'block';
+    
+    // Clear previous values
+    document.getElementById('filterValue').value = '';
+    document.getElementById('filterDate').value = '';
+    
+    // Show appropriate filter type
+    if (['Users', 'Department', 'Specs', 'Serial No'].includes(filterBy)) {
+        textFilter.style.display = 'flex';
+        dateFilter.style.display = 'none';
+    } else if (['Date of Purchase', 'Issue Date', 'Employee Joining Date'].includes(filterBy)) {
+        textFilter.style.display = 'none';
+        dateFilter.style.display = 'flex';
+    } else {
+        textFilter.style.display = 'none';
+        dateFilter.style.display = 'none';
+    }
+}
+
+// Initialize on page load and maintain selected values
+document.addEventListener('DOMContentLoaded', function() {
+    showFilterInput();
+    
+    // Maintain selected values after form submission
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterBy = urlParams.get('filter_by');
+    if (filterBy) {
+        document.getElementById('filter_by').value = filterBy;
+        if (['Users', 'Department', 'Specs', 'Serial No'].includes(filterBy)) {
+            document.getElementById('filterValue').value = urlParams.get('filter_value') || '';
+        } else if (['Date of Purchase', 'Issue Date', 'Employee Joining Date'].includes(filterBy)) {
+            document.getElementById('filterDate').value = urlParams.get('filter_date') || '';
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">
+        <i class="fas fa-users me-2"></i>Staff Management
+    </h1>
+
+    <!-- Add Staff Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-user-plus me-2"></i>Add New Staff
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3" id="staffForm">
+                <div class="col-12 col-sm-6 col-lg-3 mb-2">
+                    <label class="form-label">Department</label>
+                    <select name="dept" id="deptDropdown" class="form-select" required onchange="toggleCustomDept(this)">
+                        <option value="">-- Select Department --</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept }}">{{ dept }}</option>
+                        {% endfor %}
+                        <option value="Other">➕ Add New Department</option>
+                    </select>
+                    <input type="text" name="custom_dept" id="customDeptInput" class="form-control mt-2 d-none" placeholder="Enter New Department">
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-3 mb-2">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="Enter full name" required>
+                </div>
+                <div class="col-12 col-lg-3 mb-2">
+                    <label class="form-label">Designation</label>
+                    <input type="text" name="designation" class="form-control" placeholder="Enter job title" required>
+                </div>
+                <div class="col-12 col-lg-3 mb-2">
+                    <label class="form-label">Date of Joining</label>
+                    <input type="date" name="date_of_joining" class="form-control" value="{{ (request.form.date_of_joining or '') if request.method == 'POST' else '' }}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus me-2"></i>Add Staff
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Department Filter + Search Toggle -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-md-4">
+                    <label for="dept-filter" class="form-label">Filter by Department</label>
+                    <select id="dept-filter" class="form-select">
+                        <option value="all">All Departments</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button id="toggle-search" type="button" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                <div class="col-md-4 d-flex align-items-end" id="search-box-wrapper" style="display:none;">
+                    <input type="text" id="staff-search" class="form-control" style="width:100%;" placeholder="Search by staff name or designation...">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Table -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-table me-2"></i>Existing Staff
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover staff-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Department</th>
+                            <th>Name</th>
+                            <th>Designation</th>
+                            <th>Date of Joining</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in staff %}
+                        <tr>
+                            <td>{{ s['id'] }}</td>
+                            <td>{{ s['dept'] }}</td>
+                            <td>{{ s['name'] }}</td>
+                            <td>{{ s['designation'] }}</td>
+                            <!-- FIX: Add the default filter to show '-' for blank dates -->
+                            <td>{{ s['date_of_joining'] | dateformat | default('-', true) }}</td>
+                            <!-- Add actions column -->
+                            <td>
+                                <a href="#" class="btn btn-sm btn-warning edit-btn"
+                                   data-id="{{ s['id'] }}"
+                                   data-name="{{ s['name'] }}"
+                                   data-designation="{{ s['designation'] }}"
+                                   data-date="{{ s['date_of_joining'] }}">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{{ url_for('main.delete_staff', staff_id=s['id']) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this staff?');">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted">No staff added yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Staff Modal -->
+<div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="editStaffForm" method="POST" action="{{ url_for('main.edit_staff') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editStaffModalLabel">Edit Staff</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id" id="edit-staff-id">
+          <div class="mb-3">
+            <label for="edit-staff-name" class="form-label">Name</label>
+            <input type="text" class="form-control" name="name" id="edit-staff-name" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit-staff-designation" class="form-label">Designation</label>
+            <input type="text" class="form-control" name="designation" id="edit-staff-designation" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit-staff-date" class="form-label">Date of Joining</label>
+            <input type="date" class="form-control" name="date_of_joining" id="edit-staff-date">
+          </div>
+          <div class="mb-3">
+            <label for="edit-staff-dept" class="form-label">Department</label>
+            <select class="form-select" name="dept" id="edit-staff-dept" required>
+                {% for dept in departments %}
+                    <option value="{{ dept }}">{{ dept }}</option>
+                {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Script to show/hide custom department input -->
+<script>
+    function toggleCustomDept(select) {
+        const input = document.getElementById('customDeptInput');
+        if (select.value === 'Other') {
+            input.classList.remove('d-none');
+            input.required = true;
+        } else {
+            input.classList.add('d-none');
+            input.required = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Department filter (existing code)
+    const deptFilter = document.getElementById('dept-filter');
+    const staffTable = document.querySelector('.staff-table');
+    if (deptFilter && staffTable) {
+        const rows = staffTable.querySelectorAll('tbody tr');
+        function populateDeptFilter() {
+            const departments = new Set();
+            rows.forEach(row => {
+                const deptCell = row.cells[1];
+                if (deptCell && deptCell.textContent.trim()) {
+                    departments.add(deptCell.textContent.trim());
+                }
+            });
+            deptFilter.innerHTML = '<option value="all">All Departments</option>';
+            departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                deptFilter.appendChild(option);
+            });
+        }
+        populateDeptFilter();
+        deptFilter.addEventListener('change', function() {
+            const selectedDept = this.value;
+            rows.forEach(row => {
+                const deptCell = row.cells[1];
+                if (deptCell) {
+                    const rowDept = deptCell.textContent.trim();
+                    row.style.display = (selectedDept === 'all' || rowDept === selectedDept) ? '' : 'none';
+                }
+            });
+        });
+    }
+
+    // Toggle search box
+    const toggleSearchBtn = document.getElementById('toggle-search');
+    const searchBoxWrapper = document.getElementById('search-box-wrapper');
+    const searchInput = document.getElementById('staff-search');
+    if (toggleSearchBtn && searchBoxWrapper) {
+        toggleSearchBtn.addEventListener('click', function() {
+            if (searchBoxWrapper.style.display === 'none') {
+                searchBoxWrapper.style.display = '';
+                searchInput.focus();
+            } else {
+                searchBoxWrapper.style.display = 'none';
+                searchInput.value = '';
+                // Reset table rows when hiding search
+                if (staffTable) {
+                    const rows = staffTable.querySelectorAll('tbody tr');
+                    rows.forEach(row => row.style.display = '');
+                }
+            }
+        });
+    }
+
+    // Staff search functionality
+    if (searchInput && staffTable) {
+        const rows = staffTable.querySelectorAll('tbody tr');
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            rows.forEach(row => {
+                const name = row.cells[2]?.textContent.toLowerCase() || '';
+                const designation = row.cells[3]?.textContent.toLowerCase() || '';
+                const matches =
+                    name.includes(query) ||
+                    designation.includes(query);
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+    }
+
+    // Populate and handle edit staff modal
+    const editStaffModal = document.getElementById('editStaffModal');
+    if (editStaffModal) {
+        editStaffModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const designation = button.getAttribute('data-designation');
+            const date = button.getAttribute('data-date');
+
+            const modalId = document.getElementById('edit-staff-id');
+            const modalName = document.getElementById('edit-staff-name');
+            const modalDesignation = document.getElementById('edit-staff-designation');
+            const modalDate = document.getElementById('edit-staff-date');
+
+            if (modalId) modalId.value = id;
+            if (modalName) modalName.value = name;
+            if (modalDesignation) modalDesignation.value = designation;
+            if (modalDate) modalDate.value = date;
+        });
+    }
+
+    // Edit button click handler
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('edit-staff-id').value = this.dataset.id;
+            document.getElementById('edit-staff-name').value = this.dataset.name;
+            document.getElementById('edit-staff-designation').value = this.dataset.designation;
+            document.getElementById('edit-staff-date').value = this.dataset.date || '';
+            var editModal = new bootstrap.Modal(document.getElementById('editStaffModal'));
+            editModal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

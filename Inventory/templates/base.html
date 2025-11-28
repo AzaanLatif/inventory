@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title if title else "Inventory Management" }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+
+<!-- Font Awesome CSS -->
+<link href="{{ url_for('static', filename='css/all.min.css') }}" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --secondary-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --card-shadow: 0 10px 25px rgba(15, 23, 42, 0.4);
+            --card-shadow-hover: 0 15px 35px rgba(15, 23, 42, 0.5);
+            --border-radius: 10px;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(15, 15, 23, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            padding: 0.5rem 0; /* Reduced padding */
+            min-height: 50px; /* Reduced height */
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.1rem; /* Reduced font size */
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            padding: 0.25rem 0; /* Reduced padding */
+        }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 6px; /* Reduced border radius */
+            margin: 0 2px; /* Reduced margin */
+            padding: 0.4rem 0.8rem !important; /* Reduced padding */
+            font-size: 0.9rem; /* Reduced font size */
+        }
+
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .card-header {
+            font-size: 1.1rem; /* Smaller card header */
+            font-weight: 600;
+            padding: 0.8rem 1rem; /* Reduced padding */
+        }
+
+        .card-header i {
+            font-size: 1rem; /* Smaller icon for card headers */
+            margin-right: 0.4rem;
+        }
+
+        .card:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .dashboard-card {
+            background: var(--primary-gradient);
+            color: white;
+            text-align: center;
+            padding: 1.2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .dashboard-card.success {
+            background: var(--success-gradient);
+        }
+
+        .dashboard-card.warning {
+            background: var(--warning-gradient);
+        }
+
+        .dashboard-card.staff {
+            background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+            color: white;
+        }
+
+        .dashboard-card h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .dashboard-card p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .dashboard-card i {
+            margin-bottom: 0.8rem !important;
+        }
+
+        .table {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            font-size: 14px;
+        }
+
+        .table th, .table td {
+            padding: 8px 12px;
+            vertical-align: middle;
+        }
+
+        .table th:first-child, .table td:first-child {
+            width: 60px;
+            text-align: center;
+        }
+
+        .table-responsive {
+            border-radius: var(--border-radius);
+            max-height: 75vh;
+            overflow: auto;
+        }
+
+        /* Responsive table column sizing */
+        .table th, .table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        
+        /* Issue table specific sizing */
+        .issue-table th:nth-child(1), .issue-table td:nth-child(1) { width: 50px; } /* ID */
+        .issue-table th:nth-child(2), .issue-table td:nth-child(2) { width: 100px; } /* Department */  
+        .issue-table th:nth-child(3), .issue-table td:nth-child(3) { width: 120px; } /* Staff */
+        .issue-table th:nth-child(4), .issue-table td:nth-child(4) { width: 130px; } /* Item */
+        .issue-table th:nth-child(5), .issue-table td:nth-child(5) { width: 100px; } /* Category */
+        .issue-table th:nth-child(6), .issue-table td:nth-child(6) { width: 100px; } /* Subcategory */
+        .issue-table th:nth-child(7), .issue-table td:nth-child(7) { width: 150px; } /* Specs */
+        .issue-table th:nth-child(8), .issue-table td:nth-child(8) { width: 70px; text-align: center; } /* Quantity */
+        .issue-table th:nth-child(9), .issue-table td:nth-child(9) { width: 100px; } /* Date */
+        .issue-table th:nth-child(10), .issue-table td:nth-child(10) { width: 150px; } /* Reason */
+        .issue-table th:nth-child(11), .issue-table td:nth-child(11) { width: 90px; text-align: center; } /* Return Status */
+
+        /* Purchase table specific sizing */
+        .purchase-table th:nth-child(1), .purchase-table td:nth-child(1) { width: 50px; } /* ID */
+        .purchase-table th:nth-child(2), .purchase-table td:nth-child(2) { width: 120px; } /* Vendor */
+        .purchase-table th:nth-child(3), .purchase-table td:nth-child(3) { width: 100px; } /* Date */
+        .purchase-table th:nth-child(4), .purchase-table td:nth-child(4) { width: 120px; } /* Category */
+        .purchase-table th:nth-child(5), .purchase-table td:nth-child(5) { width: 120px; } /* Subcategory */
+        .purchase-table th:nth-child(6), .purchase-table td:nth-child(6) { width: 150px; } /* Specs */
+        .purchase-table th:nth-child(7), .purchase-table td:nth-child(7) { width: 80px; text-align: center; } /* Quantity */
+        .purchase-table th:nth-child(8), .purchase-table td:nth-child(8) { width: 100px; text-align: right; } /* Unit Price */
+        .purchase-table th:nth-child(9), .purchase-table td:nth-child(9) { width: 120px; text-align: right; } /* Total Price */
+        
+        /* Staff table specific sizing */
+        .staff-table th:nth-child(1), .staff-table td:nth-child(1) { width: 80px; } /* ID */
+        .staff-table th:nth-child(2), .staff-table td:nth-child(2) { width: 200px; } /* Department */
+        .staff-table th:nth-child(3), .staff-table td:nth-child(3) { width: 250px; } /* Name */
+        .staff-table th:nth-child(4), .staff-table td:nth-child(4) { width: 300px; } /* Designation */
+
+        /* Items table specific sizing */
+        .items-table th:nth-child(1), .items-table td:nth-child(1) { width: 80px; } /* ID */
+        .items-table th:nth-child(2), .items-table td:nth-child(2) { width: 180px; } /* Category */
+        .items-table th:nth-child(3), .items-table td:nth-child(3) { width: 180px; } /* Subcategory */
+        .items-table th:nth-child(4), .items-table td:nth-child(4) { width: 400px; } /* Remarks/Specs */
+
+        .table-dark {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.005);
+        }
+
+        /* Make ALL table elements more prominent and readable */
+        .table td {
+            font-weight: 600;
+            color: #f0f8ff;
+            background: rgba(102, 126, 234, 0.06);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+        }
+
+        /* Enhanced styling for all table content */
+        .staff-table td,
+        .items-table td,
+        .purchase-table td,
+        .issue-table td {
+            font-weight: 600;
+            color: #f0f8ff;
+            background: rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Make main content columns extra prominent */
+        .staff-table td:nth-child(2), /* Department */
+        .staff-table td:nth-child(3), /* Name */
+        .staff-table td:nth-child(4), /* Designation */
+        .items-table td:nth-child(2), /* Category */
+        .items-table td:nth-child(3), /* Subcategory */
+        .items-table td:nth-child(4), /* Specs */
+        .purchase-table td:nth-child(2), /* Vendor */
+        .purchase-table td:nth-child(4), /* Category */
+        .purchase-table td:nth-child(5), /* Subcategory */
+        .purchase-table td:nth-child(6), /* Specs */
+        .issue-table td:nth-child(2), /* Department */
+        .issue-table td:nth-child(3), /* Staff */
+        .issue-table td:nth-child(4), /* Item */
+        .issue-table td:nth-child(5), /* Category */
+        .issue-table td:nth-child(6) { /* Subcategory */
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        /* Stock table styling */
+        .table tbody td:nth-child(1), /* Category */
+        .table tbody td:nth-child(2) { /* Subcategory */
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        /* Stock table dashboard color match */
+        .stock-purchase {
+            background: var(--primary-gradient) !important;
+            color: #fff !important;
+            font-weight: 700;
+            box-shadow: var(--card-shadow);
+        }
+        .stock-issue {
+            background: var(--warning-gradient) !important;
+            color: #fff !important;
+            font-weight: 700;
+            box-shadow: var(--card-shadow);
+        }
+        .stock-available {
+            background: var(--success-gradient) !important;
+            color: #fff !important;
+            font-weight: 700;
+            box-shadow: var(--card-shadow);
+        }
+
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-gradient);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-gradient);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-gradient);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(6, 182, 212, 0.4);
+            color: white;
+        }
+
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 14px;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+            color: #f8fafc;
+        }
+
+        .form-control[readonly] {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        /* Fix dropdown menu background */
+        .form-select option {
+            background-color: #1e293b !important;
+            color: #e2e8f0 !important;
+            padding: 8px 12px;
+        }
+
+        /* Bootstrap dropdown menu styling */
+        .dropdown-menu {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .dropdown-item {
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            background-color: rgba(79, 70, 229, 0.2);
+            color: #f8fafc;
+        }
+
+        .dropdown-item:active {
+            background-color: rgba(79, 70, 229, 0.3);
+            color: #f8fafc;
+        }
+
+        /* Select dropdown arrow styling - subtle gray arrow */
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cbd5e1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px 12px;
+            padding-right: 32px;
+        }
+
+        /* Additional dropdown fixes for all browsers */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        /* Firefox specific dropdown styling */
+        select option {
+            background-color: #1e293b !important;
+            color: #e2e8f0 !important;
+        }
+
+        /* Chrome/Safari/Edge dropdown styling */
+        select::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        select::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        select::-webkit-scrollbar-thumb {
+            background: rgba(79, 70, 229, 0.4);
+            border-radius: 3px;
+        }
+
+        select::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 70, 229, 0.6);
+        }
+
+        .badge {
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-weight: 500;
+        }
+
+        .alert {
+            border-radius: var(--border-radius);
+            border: none;
+            box-shadow: var(--card-shadow);
+        }
+
+        .page-title {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 1.8rem; /* Reduced from default */
+            margin-bottom: 1.5rem; /* Reduced margin */
+        }
+
+        .page-title i {
+            font-size: 1.6rem; /* Smaller icon size */
+            margin-right: 0.5rem; /* Reduced margin */
+        }
+
+        .section-header {
+            border-left: 4px solid #667eea;
+            padding-left: 0.8rem;
+            margin: 1.5rem 0 0.8rem 0;
+            font-size: 1.3rem; /* Smaller section header */
+            font-weight: 600;
+        }
+
+        .section-header i {
+            font-size: 1.2rem; /* Smaller icon for section headers */
+            margin-right: 0.4rem;
+        }
+
+        .form-floating .form-control {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .table-responsive {
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/stock">
+                <i class="fas fa-boxes me-2"></i>Inventory Management
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <!-- Change 'stock' to 'main.stock' -->
+                        <a href="{{ url_for('main.stock') }}" class="nav-link">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <!-- Change 'staff' to 'main.staff' -->
+                        <a href="{{ url_for('main.staff') }}" class="nav-link">
+                            <i class="fas fa-users me-1"></i>Staff
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <!-- Change 'items' to 'main.items' -->
+                        <a href="{{ url_for('main.items') }}" class="nav-link">
+                            <i class="fas fa-box me-1"></i>Items
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <!-- Change 'purchase' to 'main.purchase' -->
+                        <a href="{{ url_for('main.purchase') }}" class="nav-link">
+                            <i class="fas fa-shopping-cart me-1"></i>Purchase
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <!-- Change 'issue' to 'main.issue' -->
+                        <a href="{{ url_for('main.issue') }}" class="nav-link">
+                            <i class="fas fa-dolly-flatbed me-1"></i>Issue
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <!-- FIX: Change 'laptop_report' to 'main.laptop_report' -->
+                        <a href="{{ url_for('main.laptop_report') }}" class="nav-link">
+                            <i class="fas fa-laptop me-1"></i>Laptop Report
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-1"></i>My Account
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="accountDropdown">
+                            <li>
+    <a class="dropdown-item" href="{{ url_for('main.account_settings') }}">
+        <i class="fa fa-cog"></i> Change Account Details
+    </a>
+</li>
+{% if session.get('role') == 'admin' %}
+<li>
+    <a class="dropdown-item" href="{{ url_for('main.manage_users') }}">
+        <i class="fa fa-users"></i> Manage Users
+    </a>
+</li>
+{% endif %}
+<li>
+    <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+        <i class="fa fa-sign-out-alt"></i> Logout
+    </a>
+</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->  
+    <div class="container my-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' if category == 'warning' else 'check-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}
+        <div class="container">
+            <h2 class="page-title mb-4">
+                <i class="fas fa-cog"></i>Account Settings
+            </h2>
+                    <form method="POST" action="{{ url_for('account_settings') }}">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" readonly>
+                        </div>lass="mb-3">
+                        <div class="mb-3">ername" class="form-label">Username</label>
+                            <label for="current_password" class="form-label">Current Password</label>ue="{{ current_user.username }}" readonly>
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        </div>lass="mb-3">
+                        <div class="mb-3">rrent_password" class="form-label">Current Password</label>
+                            <label for="new_password" class="form-label">New Password</label> name="current_password" required>
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        </div>lass="mb-3">
+                        <div class="mb-3">w_password" class="form-label">New Password</label>
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>ord" required>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>lass="mb-3">
+                        <button type="submit" class="btn btn-primary">label">Confirm New Password</label>
+                            <i class="fas fa-save me-1"></i>Save Changesid="confirm_password" name="confirm_password" required>
+                        </button>
+                    </form>tton type="submit" class="btn btn-primary">
+                </div>      <i class="fas fa-save me-1"></i>Save Changes
+            </div>      </button>
+        </div>      </form>
+        {% endblock %}
+    </div>  </div>
+        </div>
+    <!-- Bootstrap JS -->
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

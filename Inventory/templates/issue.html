@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="page-title">
+    <i class="fas fa-handshake me-2"></i>Issue Items
+</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-hand-holding me-2"></i>Issue Item to Staff
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <!-- Department and Staff Row -->
+            <div class="row mb-3">
+                <div class="col-12 col-md-6 mb-2">
+                    <label class="form-label">Department *</label>
+                    <select id="department" name="department" class="form-select" required>
+                        <option value="">Choose department...</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 mb-2">
+                    <label class="form-label">Staff Name *</label>
+                    <select id="staff_name" name="staff_name" class="form-select" required>
+                        <option value="">Choose staff member...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Category, Subcategory, Specs Row -->
+            <div class="row mb-3">
+                <div class="col-12 col-md-4 mb-2">
+                    <label class="form-label">Category *</label>
+                    <select id="category" name="category" class="form-select" required>
+                        <option value="">Choose category...</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 mb-2">
+                    <label class="form-label">Subcategory *</label>
+                    <select id="subcategory" name="subcategory" class="form-select" required>
+                        <option value="">Choose subcategory...</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 mb-2" id="specs-wrapper" style="display:none;">
+                    <label class="form-label">Specs</label>
+                    <select id="specs" name="specs" class="form-select">
+                        <option value="">Choose specs...</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 mb-2" id="serial-wrapper" style="display:none;">
+                    <label class="form-label">Serial No</label>
+                    <select id="serial_no" name="serial_no" class="form-select">
+                        <option value="">Choose serial no...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Quantity, Return, Date, Reason Row -->
+            <div class="row mb-3">
+                <div class="col-6 col-md-3 mb-2">
+                    <label class="form-label">Quantity *</label>
+                    <input type="number" name="quantity" class="form-control" required placeholder="1" value="1" id="quantity-input">
+                    <small class="text-muted">Use negative (-) to return items</small>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <label class="form-label">Status</label>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="is_return" id="is_return" disabled>
+                        <label class="form-check-label" for="is_return">
+                            <span id="return-status">Issuing</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <label class="form-label">Date *</label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div class="col-12 col-md-6 mb-2">
+                    <label class="form-label">Reason</label>
+                    <textarea name="remarks" class="form-control" rows="2" placeholder="Reason for issuing this item..."></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-hand-holding me-2"></i>Issue Item
+            </button>
+        </form>
+    </div>
+</div>
+
+<h3 class="section-header mt-5">
+    <i class="fas fa-list me-2"></i>Issued Items
+</h3>
+
+<!-- Search Box -->
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="issue-search" class="form-label">Search Issues</label>
+                <input type="text" id="issue-search" class="form-control" placeholder="Search by Department, Staff Name, Category, Subcategory or Specs..">
+                <small class="text-muted">Type to search in real-time</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover mt-3 issue-table">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Department</th>
+                <th>Staff</th>
+                <th>Category</th>
+                <th>Subcategory</th>
+                <th>Specs</th>
+                <th>Serial No</th> <!-- Add this line -->
+                <th>Quantity</th>
+                <th class="col-date">Date</th>
+                <th>Issue Reason</th>
+                <th>Return Reason</th>
+                <th>Return Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in issues %}
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.department }}</td>
+                <td>{{ row.staff_name }}</td>
+                <td>{{ row.category_name or '—' }}</td>
+                <td>{{ row.subcategory_name or '—' }}</td>
+                <td>{{ row.specs or '—' }}</td>
+                <td>{{ row.serial_no or '—' }}</td> <!-- Add this line -->
+                <td>
+                    {% if row.quantity < 0 %}
+                        {{ -row.quantity }}
+                    {% else %}
+                        {{ row.quantity }}
+                    {% endif %}
+                </td>
+                <td>{{ row.date | dateformat }}</td>
+                <td>{{ row.remarks or '—' }}</td>
+                <td>{{ row.return_reason or '—' }}</td>
+                <td>
+                    {% if row.is_return %}
+                        <span class="badge" style="background-color: #155724; color: white;">Returned ✓</span>
+                    {% else %}
+                        <span class="badge" style="background-color: #495057; color: white;">Not yet ✗</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="12" class="text-center text-muted">No items issued yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .col-date {
+        width: 140px;
+        min-width: 120px;
+        max-width: 180px;
+        white-space: nowrap;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const departmentSelect = document.getElementById('department');
+    const staffSelect = document.getElementById('staff_name');
+    
+    fetch('/api/get_departments')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                departmentSelect.appendChild(option);
+            });
+        });
+
+    fetch('/api/get_purchase_categories')
+        .then(response => response.json())
+        .then(data => {
+            const categorySelect = document.getElementById('category');
+            data.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categorySelect.appendChild(option);
+            });
+        });
+});
+
+document.getElementById('department').addEventListener('change', function() {
+    const department = this.value;
+    const staffSelect = document.getElementById('staff_name');
+    
+    if (!department) {
+        staffSelect.innerHTML = '<option value="">Choose staff member...</option>';
+        return;
+    }
+    
+    fetch(`/api/get_staff_by_department/${encodeURIComponent(department)}`)
+        .then(response => response.json())
+        .then(data => {
+            staffSelect.innerHTML = '<option value="">Choose staff member...</option>';
+            data.forEach(staff => {
+                staffSelect.innerHTML += `<option value="${staff.name}">${staff.name} (${staff.designation})</option>`;
+            });
+        });
+});
+
+document.getElementById('category').addEventListener('change', function() {
+    const categoryId = this.value;
+    const subSelect = document.getElementById('subcategory');
+    const specsWrapper = document.getElementById('specs-wrapper');
+    const specsSelect = document.getElementById('specs');
+    const serialWrapper = document.getElementById('serial-wrapper');
+    const serialSelect = document.getElementById('serial_no');
+    
+    subSelect.innerHTML = '<option value="">Choose subcategory...</option>';
+    specsSelect.innerHTML = '<option value="">Choose specs...</option>';
+    serialSelect.innerHTML = '<option value="">Choose serial no...</option>';
+    specsWrapper.style.display = 'none';
+    serialWrapper.style.display = 'none';
+    specsSelect.required = false;
+    serialSelect.required = false;
+    
+    if (!categoryId) return;
+    
+    fetch(`/api/get_purchase_subcategories/${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(sub => {
+                subSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+            });
+        });
+});
+
+document.getElementById('subcategory').addEventListener('change', function() {
+    const subcategoryId = this.value;
+    const specsWrapper = document.getElementById('specs-wrapper');
+    const specsSelect = document.getElementById('specs');
+    const serialWrapper = document.getElementById('serial-wrapper');
+    const serialSelect = document.getElementById('serial_no');
+
+    specsSelect.innerHTML = '<option value="">Choose specs...</option>';
+    serialSelect.innerHTML = '<option value="">Choose serial no...</option>';
+    specsWrapper.style.display = 'none';
+    serialWrapper.style.display = 'none';
+    specsSelect.required = false;
+    serialSelect.required = false;
+
+    if (!subcategoryId) return;
+
+    // 1. Check for specs
+    fetch(`/api/get_purchase_specs/${subcategoryId}`)
+        .then(response => response.json())
+        .then(specsData => {
+            if (Array.isArray(specsData) && specsData.length > 0) {
+                // Specs exist
+                specsData.forEach(spec => {
+                    specsSelect.innerHTML += `<option value="${spec.id}">${spec.specs}</option>`;
+                });
+                specsWrapper.style.display = '';
+                specsSelect.required = true;
+                serialWrapper.style.display = 'none';
+                serialSelect.required = false;
+            } else {
+                // No specs, check for serials directly
+                fetch(`/get_serials_by_subcategory?subcategory_id=${subcategoryId}`)
+                    .then(response => response.json())
+                    .then(serialsData => {
+                        if (Array.isArray(serialsData) && serialsData.length > 0) {
+                            serialsData.forEach(serial => {
+                                serialSelect.innerHTML += `<option value="${serial.serial_no}">${serial.serial_no}</option>`;
+                            });
+                            serialWrapper.style.display = '';
+                            serialSelect.required = true;
+                        } else {
+                            serialWrapper.style.display = 'none';
+                            serialSelect.required = false;
+                        }
+                    });
+                specsWrapper.style.display = 'none';
+                specsSelect.required = false;
+            }
+        });
+});
+
+document.getElementById('specs').addEventListener('change', function() {
+    const specsId = this.value;
+    const serialWrapper = document.getElementById('serial-wrapper');
+    const serialSelect = document.getElementById('serial_no');
+    serialSelect.innerHTML = '<option value="">Choose serial no...</option>';
+    serialWrapper.style.display = 'none';
+    serialSelect.required = false;
+
+    if (!specsId) return;
+
+    // Fetch serial numbers for the selected specs
+    fetch(`/get_serials?specs_id=${specsId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+                data.forEach(serial => {
+                    serialSelect.innerHTML += `<option value="${serial.serial_no}">${serial.serial_no}</option>`;
+                });
+                serialWrapper.style.display = '';
+                serialSelect.required = true;
+            } else {
+                serialWrapper.style.display = 'none';
+                serialSelect.required = false;
+            }
+        });
+});
+
+function updateReturnStatus() {
+    const quantityInput = document.getElementById('quantity-input');
+    const returnCheckbox = document.getElementById('is_return');
+    const returnStatusText = document.getElementById('return-status');
+    
+    const quantity = parseInt(quantityInput.value) || 0;
+    const isNegative = quantity < 0;
+    
+    returnCheckbox.checked = true;
+    returnStatusText.textContent = isNegative ? 'Returning' : 'Issuing';
+}
+
+document.getElementById('quantity-input').addEventListener('input', updateReturnStatus);
+updateReturnStatus();
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('issue-search');
+    const issueTable = document.querySelector('.issue-table');
+    
+    if (searchInput && issueTable) {
+        const rows = issueTable.querySelectorAll('tbody tr');
+        
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            rows.forEach(row => {
+                const department = row.cells[1]?.textContent.toLowerCase() || '';
+                const staffName = row.cells[2]?.textContent.toLowerCase() || '';
+                const category = row.cells[3]?.textContent.toLowerCase() || '';
+                const subcategory = row.cells[4]?.textContent.toLowerCase() || '';
+                const specs = row.cells[5]?.textContent.toLowerCase() || '';
+                const matches =
+                    department.includes(query) ||
+                    staffName.includes(query) ||
+                    category.includes(query) ||
+                    subcategory.includes(query) ||
+                    specs.includes(query);
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

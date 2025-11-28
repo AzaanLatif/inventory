@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">
+    <i class="fas fa-list me-2"></i>Manage Items
+</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-plus-circle me-2"></i>Add New Item
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3">
+            <!-- Category -->
+            <div class="col-12 col-sm-6 col-lg-4 mb-2">
+                <label class="form-label">Category</label>
+                <select name="category_id" id="categoryDropdown" class="form-select" required onchange="toggleCustomCategory(this)">
+                    <option value="">-- Select Category --</option>
+                    {% for category in categories %}
+                    <option value="{{ category['id'] }}">{{ category['name'] }}</option>
+                    {% endfor %}
+                    <option value="custom">➕ Add New Category</option>
+                </select>
+                <input type="text" name="custom_category" id="customCategoryInput" class="form-control mt-2 d-none" placeholder="Enter New Category">
+            </div>
+
+            <!-- Subcategory -->
+            <div class="
+                <label class="form-label">Subcategory</label>
+                <select name="subcategory_id" id="subcategoryDropdown" class="form-select" required onchange="toggleCustomSubcategory(this)">
+                    <option value="">-- Select Subcategory --</option>
+                </select>
+                <input type="text" name="custom_subcategory" id="customSubcategoryInput" class="form-control mt-2 d-none" placeholder="Enter New Subcategory">
+            </div>
+
+            <!-- Remarks -->
+            <div class="col-12 col-lg-4 mb-2">
+                <label class="form-label">Remarks</label>
+                <input type="text" name="remarks" class="form-control" placeholder="Item specifications or description (optional)">
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus me-2"></i>Add Item
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<h4 class="section-header"><i class="fas fa-table me-2"></i>Items List</h4>
+<div class="table-responsive">
+    <table class="table table-striped table-hover items-table">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Subcategory</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item['id'] }}</td>
+                <td>{{ item['category'] }}</td>
+                <td>{{ item['subcategory'] }}</td>
+                <td>{{ item['remarks'] }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center text-muted">No items added yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- JavaScript -->
+<script>
+function toggleCustomCategory(select) {
+    const input = document.getElementById('customCategoryInput');
+    input.classList.toggle('d-none', select.value !== 'custom');
+}
+
+function toggleCustomSubcategory(select) {
+    const input = document.getElementById('customSubcategoryInput');
+    input.classList.toggle('d-none', select.value !== 'custom');
+}
+
+document.querySelector('#categoryDropdown').addEventListener('change', function () {
+    const categoryId = this.value;
+    const subcategorySelect = document.getElementById('subcategoryDropdown');
+
+    if (categoryId === 'custom') {
+        subcategorySelect.innerHTML = '<option value="custom" selected>Add New Subcategory</option>';
+        toggleCustomSubcategory(subcategorySelect);
+        return;
+    }
+
+    // Clear existing options
+    subcategorySelect.innerHTML = '<option value="">Loading...</option>';
+
+    // FIX: Add '/api' prefix to the URL
+    fetch(`/api/get_subcategories/${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            subcategorySelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
+            data.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.id;
+                option.textContent = sub.name;
+                subcategorySelect.appendChild(option);
+            });
+            subcategorySelect.innerHTML += '<option value="custom">Add New Subcategory</option>';
+        })
+        .catch(error => {
+            console.error('Error fetching subcategories:', error);
+            subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+        });
+});
+</script>
+{% endblock %}

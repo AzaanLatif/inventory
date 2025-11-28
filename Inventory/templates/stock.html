@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">
+    <i class="fas fa-chart-bar me-2"></i>Inventory Dashboard
+</h1>
+
+<!-- Dashboard Cards -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-4">
+        <a href="{{ url_for('main.staff') }}" class="text-decoration-none">
+            <div class="dashboard-card staff">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-users fa-lg mb-2"></i>
+                        <h3>{{ total_staff_count }}</h3>
+                        <p>Total Staff</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <!-- FIX: Change 'purchase' to 'main.purchase' -->
+        <a href="{{ url_for('main.purchase') }}" class="text-decoration-none">
+            <div class="dashboard-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-shopping-cart fa-lg mb-2"></i>
+                        <h3>{{ total_purchase_quantity }}</h3>
+                        <p>Total Purchase</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <!-- FIX: Change 'issue' to 'main.issue' -->
+        <a href="{{ url_for('main.issue') }}" class="text-decoration-none">
+            <div class="dashboard-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-hand-holding fa-lg mb-2"></i>
+                        <h3>{{ total_issue_quantity }}</h3>
+                        <p>Total Issue</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-warehouse fa-lg mb-2"></i>
+                    <h3>{{ total_purchase_quantity - total_issue_quantity }}</h3>
+                    <p>Stock Available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Table -->
+<h4 class="section-header"><i class="fas fa-warehouse me-2"></i>Stock Summary</h4>
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Category</th>
+                <th>Subcategory</th>  
+                <th>Total Purchase</th>
+                <th>Total Issue</th>
+                <th>Stock Available</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in stock_data %}
+            <tr>
+                <td>{{ row['category'] or '—' }}</td>
+                <td>{{ row['subcategory'] or '—' }}</td>
+                <td>
+                    <span class="badge stock-purchase">{{ row['total_purchased'] }}</span>
+                </td>
+                <td>
+                    <span class="badge stock-issue">{{ row['total_issued'] }}</span>
+                </td>
+                <td>
+                    <span class="badge stock-available">{{ row['stock_available'] }}</span>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted">No stock data available</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

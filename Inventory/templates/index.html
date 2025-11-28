@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="page-title">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard Overview
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card">
+            <i class="fas fa-users fa-2x mb-3"></i>
+            <h3>{{ total_staff }}</h3>
+            <p>Total Staff Members</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card warning">
+            <i class="fas fa-tags fa-2x mb-3"></i>
+            <h3>{{ total_categories }}</h3>
+            <p>Total Categories</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card success">
+            <i class="fas fa-boxes fa-2x mb-3"></i>
+            <h3>{{ total_items }}</h3>
+            <p>Total Items</p>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-shopping-cart me-2"></i>Recent Purchases
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_purchases %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Vendor</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for purchase in recent_purchases %}
+                                <tr>
+                                    <td>{{ purchase.vendor }}</td>
+                                    <td>{{ purchase.date.strftime('%Y-%m-%d') }}</td>
+                                    <td>Rs {{ "%.2f"|format(purchase.total_price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No recent purchases</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-handshake me-2"></i>Recent Issues
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_issues %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Staff</th>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue, staff, purchase, category, subcategory in recent_issues %}
+                                <tr>
+                                    <td>{{ staff.name }}</td>
+                                    <td>{{ category.name }} - {{ subcategory.name }}</td>
+                                    <td>
+                                        {% if issue.is_return %}
+                                            <span class="badge bg-success">-{{ issue.quantity|abs }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ issue.quantity }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ issue.date.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No recent issues</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{{ url_for('staff') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus d-block mb-2"></i>
+                            Add Staff
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{{ url_for('items') }}" class="btn btn-success w-100">
+                            <i class="fas fa-plus-circle d-block mb-2"></i>
+                            Add Item
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{{ url_for('purchase') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-shopping-cart d-block mb-2"></i>
+                            Record Purchase
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{{ url_for('issue') }}" class="btn btn-secondary w-100">
+                            <i class="fas fa-handshake d-block mb-2"></i>
+                            Issue Item
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{{ url_for('stock') }}" class="btn btn-info w-100">
+                            <i class="fas fa-chart-bar d-block mb-2"></i>
+                            View Stock
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

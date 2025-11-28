@@ -1,0 +1,677 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">
+        <i class="fas fa-shopping-cart me-2"></i>Purchase Management
+    </h1>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-plus-circle me-2"></i>Record New Purchase
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data" id="purchaseForm">
+                <div class="row mb-3">
+                    <div class="col-12 col-sm-6 col-lg-4 mb-2">
+                        <label for="vendor" class="form-label">Vendor *</label>
+                        <input type="text" class="form-control" id="vendor" name="vendor" required placeholder="Enter vendor name">
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-4 mb-2">
+                        <label for="bill_date" class="form-label">Bill Date *</label>
+                        <input type="date" class="form-control" id="purchase_date" name="purchase_date" required>
+                    </div>
+                    <div class="col-12 col-lg-4 mb-2">
+                        <label for="bill_image" class="form-label">Upload Bill Image</label>
+                        <input type="file" class="form-control" id="bill_image" name="bill_image" accept="image/*,.pdf">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="remarks" class="form-label">Bill Remarks</label>
+                    <input type="text" class="form-control" name="remarks" placeholder="Optional remarks for this bill">
+                </div>
+                
+                <hr>
+                <h5 class="section-header"><i class="fas fa-list me-2"></i>Items</h5>
+                
+                <div id="purchase-group">
+                    <!-- Item Card Template -->
+                    <div class="purchase-item card mb-3" style="display: none;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-box me-2"></i>Item Details</h6>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-item">
+                                <i class="fas fa-trash me-1"></i>Remove Item
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- Category Selection Row -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Category *</label>
+                                    <select class="form-select category-dropdown" name="category_id[]" required>
+                                        <option value="">Choose category...</option>
+                                    </select>
+                                    <!-- New Category Input (Hidden by default) -->
+                                    <div class="new-category-input mt-2" style="display: none;">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" placeholder="Enter new category name">
+                                            <button type="button" class="btn btn-success save-category-btn">
+                                                <i class="fas fa-check me-1"></i>Save
+                                            </button>
+                                            <button type="button" class="btn btn-secondary cancel-category-btn">
+                                                <i class="fas fa-times me-1"></i>Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Sub Category *</label>
+                                    <select class="form-select subcategory-dropdown" name="subcategory_id[]" required>
+                                        <option value="">Choose subcategory...</option>
+                                    </select>
+                                    <!-- New Subcategory Input (Hidden by default) -->
+                                    <div class="new-subcategory-input mt-2" style="display: none;">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" placeholder="Enter new subcategory name">
+                                            <button type="button" class="btn btn-success save-subcategory-btn">
+                                                <i class="fas fa-check me-1"></i>Save
+                                            </button>
+                                            <button type="button" class="btn btn-secondary cancel-subcategory-btn">
+                                                <i class="fas fa-times me-1"></i>Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Item Details Row -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Serial Number</label>
+                                    <input type="text" class="form-control" name="serial_no[]" 
+                                        placeholder="e.g., SN123456789">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Specifications</label>
+                                    <!-- FIX: Add a textarea with name="specs[]" -->
+                                    <textarea class="form-control" name="specs[]" rows="2" 
+                                                placeholder="E.g DELL(Inspiron 3585), Lenovo(Thinkpad)"></textarea>
+                                </div>
+                                
+                                <!-- Pricing Row -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Unit Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Rs</span>
+                                        <!-- FIX: Removed 'required' attribute -->
+                                        <input type="number" class="form-control" name="unit_price[]" 
+                                            step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Quantity *</label>
+                                    <input type="number" class="form-control" name="quantity[]" 
+                                        min="1" required placeholder="1" value="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Total Price</label>
+                                    <input type="text" class="form-control total-price" 
+                                        readonly placeholder="Rs 0.00">
+                                </div>
+                                
+                                <!-- Remarks Row -->
+                                <div class="col-12">
+                                    <!-- FIX: Change the label from "Remarks" to "Description" -->
+                                    <label class="form-label fw-semibold">Description</label>
+                                    <textarea class="form-control" name="item_remarks[]" rows="2" 
+                                        placeholder="E.g : AMD Ryzen 3, 16 GB RAM, SSD 256 GB, 15, Core i7"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="button" class="btn btn-secondary" id="add-item">
+                        <i class="fas fa-plus me-2"></i>Add Item
+                    </button>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Submit Purchase
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <hr>
+    <h3><i class="fas fa-history me-2"></i>Purchase History</h3>
+
+    <!-- Move this block ABOVE the table -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button id="download-btn" class="btn btn-success">
+            <i class="fa fa-download"></i> Download Purchase History
+        </button>
+        
+        <div class="d-flex align-items-center">
+            <label for="sort-purchases" class="me-2 fw-bold">Sort By:</label>
+            <select id="sort-purchases" class="form-select" style="width: auto;">
+                <option value="date-desc">Date: Newest to Oldest</option>
+                <option value="date-asc">Date: Oldest to Newest</option>
+                <option value="vendor-asc">Vendor: A to Z</option>
+                <option value="vendor-desc">Vendor: Z to A</option>
+                <option value="category-asc">Category: A to Z</option>
+                <option value="category-desc">Category: Z to A</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Real-time Search Box -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="purchase-search" class="form-label">Search Purchases</label>
+                    <input type="text" id="purchase-search" class="form-control" placeholder="Search by Vendor, Date, Category, Subcategory, Serial No...">
+                    <small class="text-muted">Type to search in real-time</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-sm purchase-history-table mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 3%">ID</th>
+                    <th style="width: 12%">Vendor</th>
+                    <th style="width: 10%">Date</th>
+                    <th style="width: 10%">Category</th>
+                    <th style="width: 10%">Subcategory</th>
+                    <th style="width: 14%">Specs</th>
+                    <!-- FIX: Moved Description header here -->
+                    <th style="width: 15%">Description</th>
+                    <th style="width: 10%">Serial No</th>
+                    <th style="width: 5%">Qty</th>
+                    <th style="width: 8%">Unit Price</th>
+                    <th style="width: 8%">Total Price</th>
+                    <th style="width: 9%">View Bill</th>
+                </tr>
+            </thead>
+            <tbody id="purchase-table-body">
+                {% for purchase in purchases %}
+                <tr class="purchase-row" 
+                    data-date="{{ purchase.date }}" 
+                    data-vendor="{{ purchase.vendor }}" 
+                    data-category="{{ purchase.category }}">
+                    <td>{{ purchase.id }}</td>
+                    <td>{{ purchase.vendor }}</td>
+                    <td>{{ purchase.date | dateformat }}</td>
+                    <td>{{ purchase.category }}</td>
+                    <td>{{ purchase.subcategory }}</td>
+                    <td>{{ purchase.specs or '—' }}</td>
+                    <!-- FIX: Moved Description data cell here -->
+                    <td>{{ purchase.remarks or '—' }}</td>
+                    <td>{{ purchase.serial_no or '—' }}</td>
+                    <td>{{ purchase.quantity }}</td>
+                    <!-- FIX: Remove decimal places from prices -->
+                    <td>Rs {{ purchase.unit_price | round | int }}</td>
+                    <td>Rs {{ purchase.total_price | round | int }}</td>
+                    <td>
+                        {% if purchase.bill_image %}
+                            <a href="{{ url_for('static', filename='uploads/' + purchase.bill_image) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No Bill</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <!-- FIX: Update the colspan to 12 to account for the new column -->
+                <tr><td colspan="12" class="text-center text-muted">No purchases recorded yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    // FIX: Remove the extra closing brace at the end of this line
+    const categoriesData = JSON.parse('{{ categories | tojson | safe }}');
+
+    function populateCategoryDropdown(dropdown) {
+        dropdown.innerHTML = '<option value="">Choose category...</option>';
+        categoriesData.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            dropdown.appendChild(option);
+        });
+        
+        // Add "Add New Category" option
+        const addNewOption = document.createElement('option');
+        addNewOption.value = 'add_new_category';
+        addNewOption.textContent = '+ Add New Category';
+        addNewOption.style.fontStyle = 'italic';
+        addNewOption.style.color = '#0d6efd';
+        dropdown.appendChild(addNewOption);
+    }
+
+    async function populateSubcategoryDropdown(categoryID, subcategoryDropdown) {
+        subcategoryDropdown.innerHTML = '<option value="">Choose subcategory...</option>';
+        if (!categoryID || categoryID === 'add_new_category') {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/get_subcategories/${categoryID}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const subcategories = await response.json();
+
+            subcategories.forEach(subcat => {
+                const option = document.createElement('option');
+                option.value = subcat.id;
+                option.textContent = subcat.name;
+                subcategoryDropdown.appendChild(option);
+            });
+            
+            // Add "Add New Subcategory" option if there are subcategories loaded
+            const addNewOption = document.createElement('option');
+            addNewOption.value = 'add_new_subcategory';
+            addNewOption.textContent = '+ Add New Subcategory';
+            addNewOption.style.fontStyle = 'italic';
+            addNewOption.style.color = '#0d6efd';
+            subcategoryDropdown.appendChild(addNewOption);
+            
+        } catch (error) {
+            console.error("Error fetching subcategories:", error);
+            const errorOption = document.createElement('option');
+            errorOption.value = '';
+            errorOption.textContent = 'Error loading subcategories';
+            subcategoryDropdown.appendChild(errorOption);
+        }
+    }
+
+    function setupDropdowns(itemCard) {
+        const categoryDropdown = itemCard.querySelector('.category-dropdown');
+        const subcategoryDropdown = itemCard.querySelector('.subcategory-dropdown');
+        const newCategoryInput = itemCard.querySelector('.new-category-input');
+        const newSubcategoryInput = itemCard.querySelector('.new-subcategory-input');
+
+        populateCategoryDropdown(categoryDropdown);
+
+        categoryDropdown.addEventListener('change', async function() {
+            const categoryID = this.value;
+            // Hide both input fields initially
+            newCategoryInput.style.display = 'none';
+            newSubcategoryInput.style.display = 'none';
+            
+            if (categoryID === 'add_new_category') {
+                // Show the new category input
+                newCategoryInput.style.display = 'block';
+                newCategoryInput.querySelector('input').focus();
+                subcategoryDropdown.innerHTML = '<option value="">-- First Save New Category --</option>';
+            } else {
+                // Fetch and populate subcategories
+                subcategoryDropdown.innerHTML = '<option value="">Loading...</option>';
+                await populateSubcategoryDropdown(categoryID, subcategoryDropdown);
+            }
+        });
+        
+        subcategoryDropdown.addEventListener('change', () => {
+            if (subcategoryDropdown.value === 'add_new_subcategory') {
+                // Show new subcategory input
+                newSubcategoryInput.style.display = 'block';
+                newSubcategoryInput.querySelector('input').focus();
+            } else {
+                newSubcategoryInput.style.display = 'none';
+            }
+        });
+        
+        // Setup price calculation and save/cancel button listeners
+        setupItemEventListeners(itemCard);
+        setupAddCategoryFunctionality(itemCard);
+    }
+
+    function setupAddCategoryFunctionality(itemCard) {
+        const newCategoryInput = itemCard.querySelector('.new-category-input');
+        const newSubcategoryInput = itemCard.querySelector('.new-subcategory-input');
+        
+        // Save Category functionality
+        itemCard.querySelector('.save-category-btn').addEventListener('click', async () => {
+            const categoryName = newCategoryInput.querySelector('input').value.trim();
+            if (categoryName) {
+                await saveNewCategory(categoryName, itemCard);
+            } else {
+                alert('Please enter a category name');
+            }
+        });
+        
+        // Cancel Category functionality
+        itemCard.querySelector('.cancel-category-btn').addEventListener('click', () => {
+            const categorySelect = itemCard.querySelector('.category-dropdown');
+            newCategoryInput.style.display = 'none';
+            newCategoryInput.querySelector('input').value = '';
+            // Reset dropdown to default
+            categorySelect.value = '';
+        });
+        
+        // Save Subcategory functionality
+        itemCard.querySelector('.save-subcategory-btn').addEventListener('click', async () => {
+            const subcategoryName = newSubcategoryInput.querySelector('input').value.trim();
+            // FIX: Use the correct class 'category-dropdown' to find the selected category ID
+            const categoryId = itemCard.querySelector('.category-dropdown').value;
+            if (subcategoryName && categoryId) {
+                await saveNewSubcategory(subcategoryName, categoryId, itemCard);
+            } else {
+                alert('Please enter a subcategory name and select a category first');
+            }
+        });
+        
+        // Cancel Subcategory functionality
+        itemCard.querySelector('.cancel-subcategory-btn').addEventListener('click', () => {
+            const subcategorySelect = itemCard.querySelector('.subcategory-dropdown');
+            newSubcategoryInput.style.display = 'none';
+            newSubcategoryInput.querySelector('input').value = '';
+            // Reset dropdown to default
+            subcategorySelect.value = '';
+        });
+        
+        // Enter key support
+        newCategoryInput.querySelector('input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                itemCard.querySelector('.save-category-btn').click();
+            }
+        });
+        
+        newSubcategoryInput.querySelector('input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                itemCard.querySelector('.save-subcategory-btn').click();
+            }
+        });
+    }
+
+    async function saveNewCategory(categoryName, itemCard) {
+        try {
+            const response = await fetch('/add_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: categoryName })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const newCategoryInput = itemCard.querySelector('.new-category-input');
+                newCategoryInput.style.display = 'none';
+                newCategoryInput.querySelector('input').value = '';
+                
+                categoriesData.push({ id: result.category_id, name: categoryName });
+                
+                // Refresh all category dropdowns on the page
+                document.querySelectorAll('.category-dropdown').forEach(dropdown => {
+                    const currentVal = dropdown.value;
+                    populateCategoryDropdown(dropdown);
+                    dropdown.value = currentVal; // try to preserve selection
+                });
+                
+                // Select the new category in the current card
+                const categorySelect = itemCard.querySelector('.category-dropdown');
+                categorySelect.value = result.category_id;
+                
+                // Trigger change to load subcategories
+                categorySelect.dispatchEvent(new Event('change'));
+                
+                alert('Category added successfully!');
+            } else {
+                alert('Error adding category: ' + result.message);
+            }
+        } catch (error) {
+            alert('Error adding category. Please try again.');
+            console.error('Error:', error);
+        }
+    }
+
+    async function saveNewSubcategory(subcategoryName, categoryId, itemCard) {
+        try {
+            const response = await fetch('/add_subcategory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    name: subcategoryName,
+                    category_id: categoryId 
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const newSubcategoryInput = itemCard.querySelector('.new-subcategory-input');
+                newSubcategoryInput.style.display = 'none';
+                newSubcategoryInput.querySelector('input').value = '';
+                
+                const subcategorySelect = itemCard.querySelector('.subcategory-dropdown');
+                await populateSubcategoryDropdown(categoryId, subcategorySelect);
+                subcategorySelect.value = result.subcategory_id;
+                
+                alert('Subcategory added successfully!');
+            } else {
+                alert('Error adding subcategory: ' + result.message);
+            }
+        } catch (error) {
+            alert('Error adding subcategory. Please try again.');
+            console.error('Error:', error);
+        }
+    }
+
+    document.getElementById('add-item').addEventListener('click', function () {
+        const itemGroupContainer = document.getElementById('purchase-group');
+        const firstItemCard = itemGroupContainer.querySelector('.purchase-item');
+
+        if (firstItemCard.style.display === 'none') {
+            // Show the first card
+            firstItemCard.style.display = 'block';
+            firstItemCard.querySelectorAll('input:not(.total-price)').forEach(input => {
+                if (input.name === 'quantity[]') {
+                    input.value = '1';
+                } else {
+                    input.value = '';
+                }
+            });
+            firstItemCard.querySelectorAll('textarea').forEach(textarea => textarea.value = '');
+            firstItemCard.querySelectorAll('select').forEach(select => {
+                select.innerHTML = '';
+            });
+            firstItemCard.querySelector('.total-price').value = 'Rs 0.00';
+            setupDropdowns(firstItemCard);
+        } else {
+            // Clone and add new card
+            const clone = firstItemCard.cloneNode(true);
+            clone.style.display = 'block';
+            clone.querySelectorAll('input:not(.total-price)').forEach(input => {
+                if (input.name === 'quantity[]') {
+                    input.value = '1';
+                } else {
+                    input.value = '';
+                }
+            });
+            clone.querySelectorAll('textarea').forEach(textarea => textarea.value = '');
+            clone.querySelectorAll('select').forEach(select => select.innerHTML = '');
+            clone.querySelector('.total-price').value = 'Rs 0.00';
+            setupDropdowns(clone);
+            itemGroupContainer.appendChild(clone);
+        }
+        
+        // Update item counter in header
+        updateItemCounter();
+    });
+
+    document.getElementById('purchase-group').addEventListener('click', function (e) {
+        if (e.target.classList.contains('remove-item') || e.target.closest('.remove-item')) {
+            const cards = document.querySelectorAll('.purchase-item');
+            const targetCard = e.target.closest('.purchase-item');
+            
+            if (cards.length > 1) {
+                targetCard.remove();
+            } else if (cards.length === 1) {
+                // Reset the last card instead of removing it
+                targetCard.querySelectorAll('input:not(.total-price)').forEach(input => {
+                    if (input.name === 'quantity[]') {
+                        input.value = '1';
+                    } else {
+                        input.value = '';
+                    }
+                });
+                targetCard.querySelectorAll('textarea').forEach(textarea => textarea.value = '');
+                targetCard.querySelectorAll('select').forEach(select => {
+                    select.innerHTML = '';
+                    if (select.classList.contains('category-select')) {
+                        populateCategoryDropdown(select);
+                    }
+                });
+                targetCard.querySelector('.total-price').value = 'Rs 0.00';
+                targetCard.style.display = 'none';
+            }
+            updateItemCounter();
+        }
+    });
+
+    function updateItemCounter() {
+        const visibleCards = document.querySelectorAll('.purchase-item[style*="block"]').length;
+        const itemsHeader = document.querySelector('h5');
+        if (itemsHeader) {
+            itemsHeader.innerHTML = `<i class="fas fa-list me-2"></i>Items ${visibleCards > 0 ? `(${visibleCards})` : ''}`;
+        }
+    }
+
+    // Auto-calculate total price
+    function calculateTotal(itemCard) {
+        const unitPrice = parseInt(itemCard.querySelector('input[name="unit_price[]"]').value) || 0;
+        const quantity = parseInt(itemCard.querySelector('input[name="quantity[]"]').value) || 0;
+        const total = unitPrice * quantity;
+        const totalField = itemCard.querySelector('.total-price');
+        // FIX: Remove decimal places from the total price display
+        totalField.value = total > 0 ? `Rs ${Math.round(total)}` : 'Rs 0';
+    }
+
+    // Setup event listeners for new item cards
+    function setupItemEventListeners(itemCard) {
+        const unitPriceInput = itemCard.querySelector('input[name="unit_price[]"]');
+        const quantityInput = itemCard.querySelector('input[name="quantity[]"]');
+        
+        [unitPriceInput, quantityInput].forEach(input => {
+            input.addEventListener('input', () => calculateTotal(itemCard));
+            input.addEventListener('change', () => calculateTotal(itemCard));
+        });
+    }
+
+    // Form submission validation
+    document.getElementById('purchaseForm').addEventListener('submit', function(e) {
+        const visibleCards = Array.from(document.querySelectorAll('.purchase-item')).filter(card => card.style.display !== 'none');
+        
+        if (visibleCards.length === 0) {
+            alert('Please add at least one item before submitting!');
+            e.preventDefault();
+            return;
+        }
+        
+        let isValid = true;
+        visibleCards.forEach((card, index) => {
+            const categorySelect = card.querySelector('.category-dropdown');
+            const subcategorySelect = card.querySelector('.subcategory-dropdown');
+            const quantityInput = card.querySelector('input[name="quantity[]"]');
+            
+            if (!categorySelect.value || categorySelect.value === 'add_new_category' || !subcategorySelect.value || subcategorySelect.value === 'add_new_subcategory' || !quantityInput.value) {
+                alert(`Item ${index + 1}: Please fill in all required fields (Category, Subcategory, Quantity) and ensure they are not set to 'Add New'.`);
+                isValid = false;
+                return;
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+
+    // Real-time search for purchase history table
+    const searchInput = document.getElementById('purchase-search');
+    // FIX: Update the selector to match the new table class
+    const tableBody = document.querySelector('.purchase-history-table tbody');
+    const tableRows = Array.from(document.querySelectorAll('.purchase-history-table tbody tr.purchase-row'));
+
+    if (searchInput && tableRows.length > 0) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+
+            tableRows.forEach(row => {
+                const rowData = row.innerText.toLowerCase();
+                const isMatch = rowData.includes(query);
+                row.style.display = isMatch ? '' : 'none';
+            });
+        });
+    }
+
+    document.getElementById('download-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = '/download_purchases';
+    });
+
+    // --- SORTING FUNCTIONALITY ---
+    const sortSelect = document.getElementById('sort-purchases');
+    
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            const sortValue = this.value;
+            const rows = Array.from(document.querySelectorAll('.purchase-history-table tbody tr.purchase-row'));
+            
+            rows.sort((a, b) => {
+                let valA, valB;
+
+                switch(sortValue) {
+                    case 'date-desc': // Newest to Oldest
+                        valA = new Date(a.dataset.date);
+                        valB = new Date(b.dataset.date);
+                        return valB - valA;
+                    
+                    case 'date-asc': // Oldest to Newest
+                        valA = new Date(a.dataset.date);
+                        valB = new Date(b.dataset.date);
+                        return valA - valB;
+
+                    case 'vendor-asc': // A to Z
+                        valA = a.dataset.vendor.toLowerCase();
+                        valB = b.dataset.vendor.toLowerCase();
+                        return valA.localeCompare(valB);
+
+                    case 'vendor-desc': // Z to A
+                        valA = a.dataset.vendor.toLowerCase();
+                        valB = b.dataset.vendor.toLowerCase();
+                        return valB.localeCompare(valA);
+
+                    case 'category-asc': // A to Z
+                        valA = a.dataset.category.toLowerCase();
+                        valB = b.dataset.category.toLowerCase();
+                        return valA.localeCompare(valB);
+
+                    case 'category-desc': // Z to A
+                        valA = a.dataset.category.toLowerCase();
+                        valB = b.dataset.category.toLowerCase();
+                        return valB.localeCompare(valA);
+                        
+                    default:
+                        return 0;
+                }
+            });
+
+            // Re-append rows in sorted order
+            rows.forEach(row => tableBody.appendChild(row));
+        });
+    }
+</script>
+{% endblock %}
